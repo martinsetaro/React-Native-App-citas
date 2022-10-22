@@ -1,4 +1,4 @@
-import React,{useState} from 'react'
+import React,{useState,useEffect} from 'react'
 import {
 Modal,
 Text,
@@ -7,7 +7,8 @@ StyleSheet,
 TextInput ,
  View,
  ScrollView,
- Pressable
+ Pressable,
+ Alert
 }from 'react-native'
 
 import DatePicker from 'react-native-date-picker'
@@ -15,9 +16,17 @@ import DatePicker from 'react-native-date-picker'
 
 
 
-const Formulario = ({modalVisible,setModalVisible}) => {
+const Formulario = ({
+    modalVisible,
+    setModalVisible,
+    setPacientes,
+    pacientes,
+    paciente : pacienteObj,
+    setPaciente: setPacienteApp
+    }) => {
 
     const [paciente,setPaciente]= useState('')
+    const [id,setId]= useState('')
     const [propietario,setPropietario]= useState('')
     const [email,setEmail]= useState('')
     const [telefono,setTelefono]= useState('')
@@ -25,6 +34,72 @@ const Formulario = ({modalVisible,setModalVisible}) => {
     const [sintomas,setSintomas]= useState('')
 
 
+    useEffect(()=>{
+
+          if(Object.keys(pacienteObj).length > 0){
+            setId(pacienteObj.id)
+            setPaciente(pacienteObj.paciente)
+            setPropietario(pacienteObj.propietario)
+            setEmail(pacienteObj.email)
+            setFecha(pacienteObj.fecha)
+            setSintomas(pacienteObj.sintomas)
+            setTelefono(pacienteObj.telefono)
+          }
+
+
+
+    },[pacienteObj])
+
+const handleCita = () =>{
+    if([paciente,propietario,email,fecha,sintomas].includes('')){
+      Alert.alert(
+        'Error',
+        'Todos los campos son obligatorios',
+        [{text: 'Ok'}]
+      )
+      return
+    }
+
+    //revisar registro nuevo o edicion
+const nuevoPaciente = {
+        paciente,
+        propietario,
+        email,
+        telefono,
+        fecha,
+        sintomas
+    }
+
+    if(id){
+
+    nuevoPaciente.id = id
+    const pacientesActualizados = pacientes.map(pacienteState => pacienteState.id === nuevoPaciente.id ? nuevoPaciente : pacienteState)
+    
+    
+    setPacientes(pacientesActualizados)
+    setPacienteApp({})
+
+
+
+
+    }else 
+    {
+   nuevoPaciente.id = Date.now()
+   setPacientes([...pacientes,nuevoPaciente])
+    }
+
+    
+   
+    setModalVisible(false)
+    setId('')
+    setPaciente('')
+    setPropietario('')
+    setTelefono('')
+    setFecha(new Date())
+    setSintomas('')
+    setEmail('')
+
+}
 
 
 
@@ -37,13 +112,24 @@ const Formulario = ({modalVisible,setModalVisible}) => {
     >
         <SafeAreaView style={style.contenido}>
             <ScrollView>
-            <Text style={style.titulo}>Nueva {''}
+            <Text style={style.titulo}>
+                {pacienteObj.id ? 'Editar' : 'Nueva'} {''}
                 <Text style={style.subTitulo}>Cita</Text>
             </Text>
 
             <Pressable
              style={style.btnCancelar}
-             onPress={()=> setModalVisible(false)}
+                onPress={()=>{
+                setPacienteApp({})
+                setModalVisible(false)
+                setId('')
+                setPaciente('')
+                setPropietario('')
+                setTelefono('')
+                setFecha(new Date())
+                setSintomas('')
+                setEmail('')
+            }}
              >
                  <Text style={style.btnCancelarTexto}>X Cancelar</Text>
             </Pressable>
@@ -95,7 +181,8 @@ const Formulario = ({modalVisible,setModalVisible}) => {
             <View style={style.campo}>
                 <Text style={style.label}>Fecha Alta</Text>
                 <View style={style.fechaContenedor}>
-                <DatePicker
+                <DatePicker androidVariant = 'iosClone'
+                textColor='black'
                 date = {fecha} // asignar fecha con new Date() en un estado.
                 locale='es' // cambiar idioma al picker.
                 onDateChange={(date) => setFecha(date)} // para guardar la fecha elegida.
@@ -115,13 +202,14 @@ const Formulario = ({modalVisible,setModalVisible}) => {
                 numberOfLines={4}
                 />
             </View>
+
+           <Pressable 
            
-
-
-
-
-
-
+           onPress={handleCita}
+           style={style.agregarCita}>
+            <Text style={style.agregarCitaTexto}>
+            {pacienteObj.id ? 'Editar' : 'Agregar'} Paciente</Text>
+           </Pressable>
 
         </ScrollView>
         </SafeAreaView>
@@ -135,7 +223,7 @@ const Formulario = ({modalVisible,setModalVisible}) => {
 const style = StyleSheet.create({
     contenido:{
       flex:1,
-      backgroundColor:'#6d28d9'
+      backgroundColor:'#4111e6',
     },
     titulo:{
          fontSize:30,
@@ -174,6 +262,7 @@ const style = StyleSheet.create({
         backgroundColor:'#fff',
         padding:15,
         borderRadius:10,
+        color:'#1e1e1e',
        
 
     },
@@ -186,7 +275,23 @@ const style = StyleSheet.create({
     },
     fechaContenedor:{
         backgroundColor:"#fff",
-        borderRadius:10,
+          
+    },
+    agregarCita:{
+         backgroundColor:"#e66311",
+         marginTop:30,
+         marginBottom:20,
+         marginHorizontal:30,
+         padding:20,
+         borderRadius:10,
+
+    },
+    agregarCitaTexto:{
+         textAlign:'center',
+         fontSize:20,
+         textTransform:'uppercase',
+         fontWeight:'bold',
+         color:"#fff",
     }
 })
 

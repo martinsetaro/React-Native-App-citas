@@ -10,14 +10,41 @@ import {
   useColorScheme,
   View,
   Button,
-  Pressable,Modal
+  Pressable,
+  Modal,
+  Image,
+  FlatList,
+  Alert
 } from 'react-native';
 import Formulario from './src/components/Formulario';
+import Paciente from './src/components/Paciente';
+import InformacionPaciente from './src/components/InformacionPaciente';
 
 const App = () =>  {
 
-   const [clientes,setClientes] = useState([])
+   const [pacientes,setPacientes] = useState([])
    const [modalVisible,setModalVisible] = useState(false)
+   const [paciente,setPaciente] = useState({})
+   const [modalPaciente,setModalPaciente] = useState(false)
+
+   const pacienteEditar = id => {
+    const pacienteEditar = pacientes.filter (paciente => paciente.id === id)
+    setPaciente(pacienteEditar[0])
+   }
+
+   const pacienteEliminar = id => {
+    Alert.alert(
+      'Deseas eliminar este paciente?',
+      'Un paciente eliminado no se puede recuperar',
+      [
+        {text: 'Cancelar'},
+        {text:'Si, Eliminar', onPress: () => {
+          const pacientesActualizados = pacientes.filter(pacientesState => pacientesState.id != id)
+          setPacientes(pacientesActualizados)
+        }}
+      ]
+    )
+   }
 
   
 
@@ -33,17 +60,62 @@ const App = () =>  {
         style={styles.btnTextNuevaCita}
         >Nueva Cita</Text>
       </Pressable>
+  
+  {pacientes.length === 0 ? <Image
+     style={styles.imagenPortada}
+     source={require('./src/img/veterinaria.jpg')}
+     /> :
+  <FlatList
+  style={styles.listado}
+  data={pacientes}
+  keyExtractor={(item) => item.id}
+  renderItem= {({item}) => {
+    return (
+       <Paciente
+       pacienteEditar={pacienteEditar}
+       setModalVisible={setModalVisible}
+       setPaciente={setPaciente}
+       item={item}
+       pacienteEliminar={pacienteEliminar}
+       setModalPaciente={setModalPaciente}
+       />
+  )
+  }}
+  
+  />
+  
+  }
+
+
+
       <Formulario
+      pacientes={pacientes}
+      setPacientes={setPacientes}
       modalVisible = {modalVisible}
       setModalVisible = {setModalVisible}
+      paciente={paciente}
+      setPaciente={setPaciente}
       />
+
+     <Modal
+     visible={modalPaciente}
+     animationType='fade'
+     >
+
+      <InformacionPaciente
+      setModalPaciente={setModalPaciente}
+      paciente={paciente}
+      setPaciente={setPaciente}
+      />
+     </Modal>
+
    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container:{
-    backgroundColor:'#f3f4f6',
+    backgroundColor:'#fff',
     flex:1 // ocupa toda la pantalla
   },
   titulo:{
@@ -73,7 +145,17 @@ const styles = StyleSheet.create({
      fontWeight:'900',
      textTransform:'uppercase',
      fontSize:18,
+  },
+  imagenPortada:{
+    width:'100%',
+    height:500,
+    
+  },
+  listado:{
+    marginTop:50,
+    marginHorizontal:30,
   }
+  
 })
 
 
